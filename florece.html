@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PostaCare</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --blush:#F2D7D5;--cream:#FDF6F0;--rose:#D4837F;--rose-dark:#B5605C;
+    --warm-text:#5A3E3A;--light-rose:#F7E8E6;
+    --teal:#2A7B8B;--teal-dark:#1D5A66;--navy:#1B3A4B;--teal-light:#E6F4F1;
+    --green:#3A9B7A;--green-dark:#2D7A60;
+    --yellow:#E8B84B;--yellow-bg:#FFF8E7;--red:#C0392B;--red-bg:#FDECEA;
+  }
+  body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--cream);color:var(--warm-text);min-height:100vh}
+
+  .tab-bar{display:flex;background:#fff;border-bottom:2px solid #eee;position:sticky;top:0;z-index:100}
+  .tab-btn{flex:1;padding:14px;border:none;background:none;font-size:15px;font-weight:600;cursor:pointer;transition:.2s;color:#888}
+  .tab-btn.active-mother{color:var(--rose-dark);border-bottom:3px solid var(--rose-dark)}
+  .tab-btn.active-promotora{color:var(--teal-dark);border-bottom:3px solid var(--teal-dark)}
+
+  .lang-toggle{position:absolute;top:62px;right:12px;z-index:90;display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #ddd;border-radius:20px;padding:4px 10px;font-size:13px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+  .lang-toggle span{font-weight:600}
+  #mother-view .lang-toggle span{color:var(--rose-dark)}
+  #promotora-view .lang-toggle span{color:var(--teal-dark)}
+
+  .view{display:none;padding:0;position:relative}
+  .view.active{display:block}
+
+  #mother-view{background:var(--cream);min-height:calc(100vh - 50px);padding-bottom:40px}
+
+  .consent-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:calc(100vh - 120px);padding:30px 20px;text-align:center}
+  .consent-screen h1{font-size:42px;color:var(--rose-dark);margin-bottom:4px;font-weight:300;letter-spacing:2px}
+  .consent-screen .tagline{font-size:15px;color:var(--rose);margin-bottom:28px;font-style:italic}
+  .consent-screen .consent-text{width:388px;max-width:90vw;font-size:15px;line-height:1.6;color:var(--warm-text);margin-bottom:28px;background:var(--light-rose);padding:20px 24px;border-radius:16px;box-sizing:border-box}
+  .begin-btn{background:var(--rose);color:#fff;border:none;padding:16px 48px;font-size:18px;border-radius:30px;cursor:pointer;transition:.2s;font-weight:600}
+  .begin-btn:hover{background:var(--rose-dark);transform:scale(1.03)}
+
+  .questionnaire{display:none;max-width:500px;margin:0 auto;padding:20px}
+  .progress-bar-wrap{background:#e8d5d3;border-radius:10px;height:8px;margin:16px 0 24px;overflow:hidden}
+  .progress-bar-fill{height:100%;background:var(--rose);border-radius:10px;transition:width .4s ease}
+  .progress-label{text-align:center;font-size:13px;color:var(--rose-dark);font-weight:600;margin-bottom:4px}
+
+  .question-card{background:#fff;border-radius:20px;padding:28px 24px;box-shadow:0 2px 12px rgba(180,120,110,.1);margin-bottom:20px;animation:fadeIn .35s ease}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+  .question-card h3{font-size:17px;line-height:1.5;color:var(--warm-text);margin-bottom:20px;font-weight:500}
+  .option-label{display:block;padding:14px 18px;margin-bottom:10px;background:var(--light-rose);border-radius:14px;cursor:pointer;font-size:15px;line-height:1.4;transition:.15s;border:2px solid transparent}
+  .option-label:hover{border-color:var(--rose)}
+  .option-label input{display:none}
+  .option-label.selected{background:var(--rose);color:#fff;border-color:var(--rose-dark)}
+
+  .nav-btns{display:flex;gap:12px;margin-top:8px}
+  .nav-btn{flex:1;padding:14px;border:none;border-radius:14px;font-size:16px;font-weight:600;cursor:pointer;transition:.2s}
+  .nav-btn.back{background:var(--light-rose);color:var(--rose-dark)}
+  .nav-btn.next{background:var(--rose);color:#fff}
+  .nav-btn:hover{transform:scale(1.02)}
+  .nav-btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+
+  .thank-you-screen{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:calc(100vh - 120px);padding:30px 20px;text-align:center}
+  .thank-you-screen h2{font-size:28px;color:var(--rose-dark);margin-bottom:16px;font-weight:400}
+  .thank-you-screen p{font-size:16px;line-height:1.6;color:var(--warm-text);max-width:340px}
+  .code-display{font-size:48px;font-weight:700;color:var(--rose-dark);letter-spacing:8px;margin:20px 0 12px;font-family:'Courier New',monospace}
+
+  /* Promotora */
+  #promotora-view{background:#F0F4F5;min-height:calc(100vh - 50px);padding:20px;padding-top:48px;padding-bottom:40px}
+  .promo-header{text-align:center;margin-bottom:20px}
+  .promo-header h2{color:var(--navy);font-size:22px}
+  .promo-header p{color:var(--teal);font-size:14px}
+
+  /* Search bar */
+  .search-bar{max-width:500px;margin:0 auto 20px;display:flex;gap:8px}
+  .search-bar input{flex:1;padding:12px 16px;border-radius:12px;border:1px solid #ccc;font-size:15px;background:#fff;color:var(--navy);font-family:inherit;letter-spacing:2px}
+  .search-bar input::placeholder{letter-spacing:0;color:#aaa}
+  .search-bar button{padding:12px 20px;border-radius:12px;border:none;background:var(--teal);color:#fff;font-size:14px;font-weight:600;cursor:pointer;transition:.2s}
+  .search-bar button:hover{background:var(--teal-dark)}
+  .search-error{text-align:center;color:var(--red);font-size:13px;margin-bottom:12px;display:none;max-width:500px;margin-left:auto;margin-right:auto}
+
+  /* Patient card list */
+  .card-list{max-width:500px;margin:0 auto;display:flex;flex-direction:column;gap:10px}
+  .patient-card{background:#fff;border-radius:14px;padding:18px 20px;box-shadow:0 2px 8px rgba(0,0,0,.06);cursor:pointer;transition:.15s;display:flex;align-items:center;justify-content:space-between;border-left:5px solid transparent}
+  .patient-card:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(0,0,0,.1)}
+  .patient-card.risk-high{border-left-color:var(--red)}
+  .patient-card.risk-moderate{border-left-color:var(--yellow)}
+  .patient-card.risk-low{border-left-color:var(--green)}
+  .patient-card .card-code{font-weight:700;font-size:20px;color:var(--navy);letter-spacing:3px;font-family:'Courier New',monospace}
+  .patient-card .card-score{font-size:14px;color:#888;margin-top:2px}
+  .patient-card .card-badge{padding:4px 12px;border-radius:16px;font-size:12px;font-weight:700;white-space:nowrap}
+  .patient-card .card-badge.high{background:var(--red-bg);color:var(--red);border:1px solid var(--red)}
+  .patient-card .card-badge.moderate{background:var(--yellow-bg);color:#9A7B1A;border:1px solid var(--yellow)}
+  .patient-card .card-badge.low{background:#E8F8F0;color:var(--green-dark);border:1px solid var(--green)}
+
+  /* Section labels */
+  .risk-section-label{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;margin-top:16px;padding-left:4px}
+  .risk-section-label:first-child{margin-top:0}
+  .risk-section-label.high{color:var(--red)}
+  .risk-section-label.moderate{color:#9A7B1A}
+  .risk-section-label.low{color:var(--green-dark)}
+
+  /* Empty state */
+  .empty-state{display:none;text-align:center;padding:60px 20px;max-width:500px;margin:0 auto}
+  .empty-state p{color:#999;font-size:16px;line-height:1.6}
+
+  /* Detail view */
+  .detail-view{display:none;max-width:500px;margin:0 auto}
+  .back-to-list{background:none;border:none;color:var(--teal-dark);font-size:14px;font-weight:600;cursor:pointer;padding:8px 0;margin-bottom:16px;display:flex;align-items:center;gap:6px}
+  .back-to-list:hover{color:var(--teal)}
+  .detail-code{font-weight:700;color:var(--navy);font-size:24px;text-align:center;letter-spacing:4px;font-family:'Courier New',monospace;margin-bottom:16px}
+
+  .score-card{background:#fff;border-radius:16px;padding:24px;box-shadow:0 2px 12px rgba(0,0,0,.06);margin-bottom:16px}
+  .score-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px}
+  .score-number{font-size:36px;font-weight:700;color:var(--navy)}
+  .score-number span{font-size:18px;color:#999;font-weight:400}
+  .risk-badge{padding:6px 16px;border-radius:20px;font-size:13px;font-weight:700}
+  .risk-badge.low{background:#E8F8F0;color:var(--green-dark);border:1px solid var(--green)}
+  .risk-badge.moderate{background:var(--yellow-bg);color:#9A7B1A;border:1px solid var(--yellow)}
+  .risk-badge.high{background:var(--red-bg);color:var(--red);border:1px solid var(--red)}
+
+  .ai-summary{background:var(--teal-light);border-radius:12px;padding:16px;margin-bottom:16px;font-size:14px;line-height:1.6;color:var(--navy)}
+  .ai-summary strong{display:block;margin-bottom:6px;color:var(--teal-dark);font-size:13px;text-transform:uppercase;letter-spacing:.5px}
+
+  .suggested-qs{margin-bottom:16px}
+  .suggested-qs strong{display:block;margin-bottom:10px;color:var(--teal-dark);font-size:13px;text-transform:uppercase;letter-spacing:.5px}
+  .suggested-qs li{background:var(--teal-light);border-radius:10px;padding:12px 16px;margin-bottom:8px;list-style:none;font-size:14px;color:var(--navy);line-height:1.4}
+
+  .notes-section{margin-top:4px}
+  .notes-section strong{display:block;margin-bottom:8px;color:var(--teal-dark);font-size:13px;text-transform:uppercase;letter-spacing:.5px}
+  .notes-section textarea{width:100%;min-height:100px;padding:14px 16px;border-radius:12px;border:1px solid #ccc;font-size:14px;color:var(--navy);font-family:inherit;resize:vertical;line-height:1.5}
+  .notes-section textarea::placeholder{color:#aaa}
+  .notes-saved{display:none;font-size:12px;color:var(--green);margin-top:6px}
+
+  /* Availability */
+  .avail-card{background:#fff;border-radius:16px;padding:24px;box-shadow:0 2px 12px rgba(0,0,0,.06);margin:16px 0}
+  .avail-card h3{color:var(--navy);font-size:16px;margin-bottom:16px}
+  .avail-card select{width:100%;padding:12px 16px;border-radius:12px;border:1px solid #ccc;font-size:15px;margin-bottom:12px;background:#fff;color:var(--navy);font-family:inherit}
+  .avail-card label.field-label{display:block;font-size:13px;font-weight:600;color:var(--teal-dark);margin-bottom:4px;margin-top:8px;text-transform:uppercase;letter-spacing:.3px}
+
+  .cal-wrap{margin-bottom:16px}
+  .cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+  .cal-header button{background:none;border:1px solid #ccc;border-radius:8px;width:32px;height:32px;cursor:pointer;font-size:14px;color:var(--navy);display:flex;align-items:center;justify-content:center}
+  .cal-header button:hover{background:var(--teal-light)}
+  .cal-header button:disabled{opacity:.3;cursor:not-allowed}
+  .cal-header span{font-weight:600;color:var(--navy);font-size:15px}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
+  .cal-day-label{font-size:11px;font-weight:600;color:#999;padding:4px 0;text-transform:uppercase}
+  .cal-day{padding:8px 4px;border-radius:8px;font-size:14px;cursor:default;color:#ccc;border:2px solid transparent}
+  .cal-day.available{color:var(--navy);cursor:pointer;background:var(--teal-light)}
+  .cal-day.available:hover{border-color:var(--teal)}
+  .cal-day.selected{background:var(--teal);color:#fff;border-color:var(--teal-dark)}
+  .cal-day.today{font-weight:700}
+  .cal-day.past{color:#ddd}
+
+  .time-slots-wrap{margin-bottom:8px;display:none}
+  .time-slots-label{font-size:13px;font-weight:600;color:var(--teal-dark);margin-bottom:8px;text-transform:uppercase;letter-spacing:.3px}
+  .time-slots{display:flex;flex-wrap:wrap;gap:8px}
+  .time-slot{padding:8px 16px;border-radius:10px;border:2px solid #ddd;background:#fff;font-size:14px;color:var(--navy)}
+
+  .delete-card{margin:16px 0 0;text-align:center}
+  .delete-btn{width:100%;padding:14px;background:#fff;color:var(--red);border:2px solid var(--red);border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;transition:.2s}
+  .delete-btn:hover{background:var(--red);color:#fff}
+</style>
+</head>
+<body>
+
+<div class="tab-bar">
+  <button class="tab-btn active-mother" id="tab-mother" onclick="switchTab('mother')">Madre / Mother</button>
+  <button class="tab-btn" id="tab-promotora" onclick="switchTab('promotora')">Promotora</button>
+</div>
+
+<!-- Mother View -->
+<div class="view active" id="mother-view">
+  <div class="lang-toggle" onclick="toggleLang()">
+    <span id="lang-label">ES</span> / <span id="lang-label-alt" style="font-weight:400;color:#999">EN</span>
+  </div>
+
+  <div class="consent-screen" id="consent-screen">
+    <h1>PostaCare</h1>
+    <div class="tagline" id="tagline">Porque tu bienestar importa</div>
+    <div class="consent-text" id="consent-text">Sus respuestas son confidenciales. Esta informacion no se compartira con ninguna agencia de gobierno.</div>
+    <button class="begin-btn" id="begin-btn" onclick="startQuiz()">Comenzar</button>
+  </div>
+
+  <div class="questionnaire" id="questionnaire">
+    <div class="progress-label" id="progress-label">1 / 10</div>
+    <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progress-fill" style="width:10%"></div></div>
+    <div class="question-card" id="question-card"></div>
+    <div class="nav-btns">
+      <button class="nav-btn back" id="btn-back" onclick="prevQ()">Atras</button>
+      <button class="nav-btn next" id="btn-next" onclick="nextQ()" disabled>Siguiente</button>
+    </div>
+  </div>
+
+  <div class="thank-you-screen" id="thank-you">
+    <h2 id="ty-title"></h2>
+    <p id="ty-msg"></p>
+    <div class="code-display" id="ty-code" style="display:none"></div>
+    <p id="ty-code-msg" style="display:none"></p>
+  </div>
+</div>
+
+<!-- Promotora View -->
+<div class="view" id="promotora-view">
+  <div class="lang-toggle" onclick="toggleLang()">
+    <span id="lang-label-promo">ES</span> / <span id="lang-label-promo-alt" style="font-weight:400;color:#999">EN</span>
+  </div>
+
+  <div class="promo-header">
+    <h2 id="promo-title">Panel de Promotora</h2>
+    <p id="promo-subtitle">Resultados del Cuestionario</p>
+  </div>
+
+  <!-- LIST VIEW -->
+  <div id="list-view">
+    <div class="search-bar">
+      <input type="text" id="search-input" placeholder="Buscar por codigo..." maxlength="4" oninput="this.value=this.value.replace(/[^0-9]/g,'');filterCards()">
+      <button id="search-btn" onclick="searchPatient()">Buscar</button>
+    </div>
+    <div class="search-error" id="search-error"></div>
+
+    <div class="empty-state" id="empty-state">
+      <p id="empty-msg">No hay registros todavia. Los resultados apareceran aqui cuando las pacientes completen el cuestionario.</p>
+    </div>
+
+    <div class="card-list" id="card-list"></div>
+  </div>
+
+  <!-- DETAIL VIEW -->
+  <div class="detail-view" id="detail-view">
+    <button class="back-to-list" id="back-to-list" onclick="showListView()">&#8249; Volver a la lista</button>
+    <div class="detail-code" id="detail-code"></div>
+
+    <div class="score-card">
+      <div class="score-row">
+        <div class="score-number" id="score-display"></div>
+        <div class="risk-badge moderate" id="risk-badge"></div>
+      </div>
+      <div class="ai-summary">
+        <strong id="ai-summary-label">Resumen de IA</strong>
+        <span id="ai-summary-text"></span>
+      </div>
+      <div class="suggested-qs">
+        <strong id="suggested-label">Preguntas de Seguimiento Sugeridas</strong>
+        <ul id="suggested-list"></ul>
+      </div>
+      <div class="notes-section">
+        <strong id="notes-label">Notas de la Promotora</strong>
+        <textarea id="notes-area" placeholder="Escribir notas aqui..." oninput="saveNotes()"></textarea>
+        <div class="notes-saved" id="notes-saved">Guardado</div>
+      </div>
+    </div>
+
+    <div class="avail-card">
+      <h3 id="avail-title">Verificar Disponibilidad</h3>
+      <label class="field-label" id="clinic-label">Clinica asociada</label>
+      <select id="clinic-select" onchange="onClinicChange()">
+        <option value="" id="clinic-placeholder">-- Seleccionar clinica --</option>
+        <option>AltaMed</option>
+        <option>Eisner Health</option>
+        <option>Venice Family Clinic</option>
+        <option>Kedren Community Health</option>
+      </select>
+      <div class="cal-wrap" id="cal-wrap" style="display:none">
+        <label class="field-label" id="date-label">Seleccionar fecha</label>
+        <div class="cal-header">
+          <button id="cal-prev" onclick="calNav(-1)">&#8249;</button>
+          <span id="cal-month-label"></span>
+          <button id="cal-next" onclick="calNav(1)">&#8250;</button>
+        </div>
+        <div class="cal-grid" id="cal-grid"></div>
+      </div>
+      <div class="time-slots-wrap" id="time-wrap">
+        <div class="time-slots-label" id="time-label">Horarios disponibles</div>
+        <div class="time-slots" id="time-slots"></div>
+      </div>
+    </div>
+
+    <div class="delete-card">
+      <button class="delete-btn" id="delete-btn" onclick="deleteRecord()">Eliminar Registro</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// === DUMMY PATIENTS ===
+var patients = [
+  {
+    code:'4821',score:14,risk:'moderate',notes:'',
+    riskLabel:{es:'Riesgo Moderado',en:'Moderate Risk'},
+    summary:{
+      es:'Esta madre obtuvo las puntuaciones mas altas en preguntas relacionadas con sentirse agobiada y la incapacidad de disfrutar actividades diarias. No marco la pregunta sobre autolesion. Puede estar experimentando falta de sueno y falta de apoyo en el hogar.',
+      en:'This mother scored highest on questions related to feeling overwhelmed and inability to enjoy daily activities. She did not flag on the self-harm question. She may be experiencing sleep deprivation and lack of home support.'
+    },
+    questions:{
+      es:['Quien te ayuda en casa con el bebe?','Como has estado durmiendo?','Te has sentido asi despues de un embarazo anterior?'],
+      en:['Who helps you at home with the baby?','How have you been sleeping?','Have you felt this way after a previous pregnancy?']
+    }
+  },
+  {
+    code:'7193',score:21,risk:'high',notes:'',
+    riskLabel:{es:'Riesgo Alto',en:'High Risk'},
+    summary:{
+      es:'Esta madre presento puntuaciones elevadas en sentimientos de tristeza, llanto frecuente y dificultad para dormir. Marco positivo en la pregunta sobre autolesion. Se recomienda intervencion inmediata y referencia a servicios de salud mental.',
+      en:'This mother showed elevated scores on sadness, frequent crying, and difficulty sleeping. She flagged positive on the self-harm question. Immediate intervention and mental health referral are recommended.'
+    },
+    questions:{
+      es:['Tienes pensamientos de hacerte dano ahora mismo?','Tienes acceso a un profesional de salud mental?','Hay alguien en quien confies y puedas hablar sobre como te sientes?'],
+      en:['Are you having thoughts of harming yourself right now?','Do you have access to a mental health professional?','Is there someone you trust you can talk to about how you are feeling?']
+    }
+  },
+  {
+    code:'3056',score:7,risk:'low',notes:'',
+    riskLabel:{es:'Riesgo Bajo',en:'Low Risk'},
+    summary:{
+      es:'Esta madre presento puntuaciones bajas en general. Reporta algo de ansiedad ocasional pero mantiene buen funcionamiento diario. No marco en la pregunta de autolesion. Se sugiere seguimiento de rutina.',
+      en:'This mother showed low scores overall. She reports some occasional anxiety but maintains good daily functioning. She did not flag on the self-harm question. Routine follow-up is suggested.'
+    },
+    questions:{
+      es:['Que actividades disfrutas hacer con tu bebe?','Tienes apoyo de familiares o amigos?','Te gustaria informacion sobre grupos de apoyo para nuevas mamas?'],
+      en:['What activities do you enjoy doing with your baby?','Do you have support from family or friends?','Would you like information about support groups for new mothers?']
+    }
+  },
+  {
+    code:'5847',score:16,risk:'moderate',notes:'',
+    riskLabel:{es:'Riesgo Moderado',en:'Moderate Risk'},
+    summary:{
+      es:'Esta madre reporta sentirse agobiada con frecuencia y culparse a si misma innecesariamente. Tiene dificultad para disfrutar actividades. No marco en autolesion. Podria beneficiarse de consejeria y apoyo adicional en el hogar.',
+      en:'This mother reports frequently feeling overwhelmed and blaming herself unnecessarily. She has difficulty enjoying activities. She did not flag on self-harm. She could benefit from counseling and additional home support.'
+    },
+    questions:{
+      es:['Cuantas horas de sueno estas teniendo por noche?','Has hablado con tu pareja sobre como te sientes?','Te gustaria hablar con una consejera?'],
+      en:['How many hours of sleep are you getting per night?','Have you talked to your partner about how you feel?','Would you like to speak with a counselor?']
+    }
+  },
+  {
+    code:'9312',score:19,risk:'high',notes:'',
+    riskLabel:{es:'Riesgo Alto',en:'High Risk'},
+    summary:{
+      es:'Esta madre presenta puntuaciones altas en ansiedad, miedo sin motivo y sentirse agobiada. Reporta llanto frecuente y dificultad para dormir. No marco en autolesion pero se recomienda evaluacion de seguimiento cercano.',
+      en:'This mother shows high scores on anxiety, panic without reason, and feeling overwhelmed. She reports frequent crying and difficulty sleeping. She did not flag on self-harm but close follow-up evaluation is recommended.'
+    },
+    questions:{
+      es:['Has experimentado ataques de panico?','Estas tomando algun medicamento actualmente?','Tienes un medico de cabecera que puedas visitar?'],
+      en:['Have you experienced panic attacks?','Are you currently taking any medication?','Do you have a primary care doctor you can visit?']
+    }
+  }
+];
+
+var currentPatient = 0;
+var promoView = 'list'; // 'list' or 'detail'
+
+// Sort patients by risk: high first, then moderate, then low
+function sortPatients(){
+  var order = {high:0,moderate:1,low:2};
+  patients.sort(function(a,b){return (order[a.risk]||0) - (order[b.risk]||0)});
+}
+
+function renderCardList(filter){
+  var container = document.getElementById('card-list');
+  var empty = document.getElementById('empty-state');
+
+  sortPatients();
+
+  var filtered = patients;
+  if(filter){
+    filtered = patients.filter(function(p){return p.code.indexOf(filter)!==-1});
+  }
+
+  if(patients.length===0){
+    container.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  if(filtered.length===0){
+    container.innerHTML = '<div style="text-align:center;color:#999;padding:20px">'+(lang==='es'?'No se encontraron resultados.':'No results found.')+'</div>';
+    return;
+  }
+
+  var html = '';
+  var lastRisk = '';
+  var sectionLabels = {
+    high:{es:'Riesgo Alto',en:'High Risk'},
+    moderate:{es:'Riesgo Moderado',en:'Moderate Risk'},
+    low:{es:'Riesgo Bajo',en:'Low Risk'}
+  };
+
+  filtered.forEach(function(p,i){
+    var realIdx = patients.indexOf(p);
+    if(p.risk !== lastRisk){
+      html += '<div class="risk-section-label '+p.risk+'">'+sectionLabels[p.risk][lang]+'</div>';
+      lastRisk = p.risk;
+    }
+    html += '<div class="patient-card risk-'+p.risk+'" onclick="openDetail('+realIdx+')">';
+    html += '<div><div class="card-code">'+p.code+'</div><div class="card-score">'+p.score+' / 30</div></div>';
+    html += '<div class="card-badge '+p.risk+'">'+p.riskLabel[lang]+'</div>';
+    html += '</div>';
+  });
+  container.innerHTML = html;
+}
+
+function filterCards(){
+  var val = document.getElementById('search-input').value.trim();
+  document.getElementById('search-error').style.display = 'none';
+  renderCardList(val);
+}
+
+function searchPatient(){
+  var code = document.getElementById('search-input').value.trim();
+  var errEl = document.getElementById('search-error');
+  if(!code){errEl.style.display='none';renderCardList();return;}
+  var idx = -1;
+  for(var i=0;i<patients.length;i++){
+    if(patients[i].code===code){idx=i;break;}
+  }
+  if(idx===-1){
+    errEl.textContent = lang==='es'?'Codigo no encontrado.':'Code not found.';
+    errEl.style.display='block';
+    return;
+  }
+  errEl.style.display='none';
+  document.getElementById('search-input').value='';
+  openDetail(idx);
+}
+
+function openDetail(idx){
+  currentPatient = idx;
+  promoView = 'detail';
+  document.getElementById('list-view').style.display = 'none';
+  document.getElementById('detail-view').style.display = 'block';
+  // Reset availability
+  document.getElementById('clinic-select').value = '';
+  document.getElementById('cal-wrap').style.display = 'none';
+  document.getElementById('time-wrap').style.display = 'none';
+  selectedDate = null;
+  renderPatientDetail();
+}
+
+function showListView(){
+  promoView = 'list';
+  document.getElementById('detail-view').style.display = 'none';
+  document.getElementById('list-view').style.display = 'block';
+  renderCardList();
+}
+
+function renderPatientDetail(){
+  var p = patients[currentPatient];
+  document.getElementById('detail-code').textContent = p.code;
+  document.getElementById('score-display').innerHTML = p.score + ' <span>/ 30</span>';
+
+  var badge = document.getElementById('risk-badge');
+  badge.textContent = p.riskLabel[lang];
+  badge.className = 'risk-badge ' + p.risk;
+
+  document.getElementById('ai-summary-text').textContent = p.summary[lang];
+  document.getElementById('suggested-list').innerHTML = p.questions[lang].map(function(q){return '<li>'+q+'</li>'}).join('');
+  document.getElementById('notes-area').value = p.notes || '';
+}
+
+function saveNotes(){
+  if(patients.length===0) return;
+  patients[currentPatient].notes = document.getElementById('notes-area').value;
+  var saved = document.getElementById('notes-saved');
+  saved.style.display = 'block';
+  clearTimeout(saved._timer);
+  saved._timer = setTimeout(function(){saved.style.display='none'},1500);
+}
+
+function deleteRecord(){
+  if(patients.length===0) return;
+  var p = patients[currentPatient];
+  var msg = lang==='es'
+    ?'Eliminar el registro '+p.code+'? Esta accion no se puede deshacer.'
+    :'Delete record '+p.code+'? This action cannot be undone.';
+  if(!confirm(msg)) return;
+  patients.splice(currentPatient,1);
+  showListView();
+}
+
+// === EPDS QUESTIONS ===
+var questions = [
+  {en:"I have been able to laugh and see the funny side of things",es:"Me he podido reir y ver el lado gracioso de las cosas",
+   opts:{en:["As much as I always could","Not quite so much now","Definitely not so much now","Not at all"],
+         es:["Igual que siempre","No tanto ahora","Mucho menos ahora","No, nada"]}},
+  {en:"I have looked forward to things with enjoyment",es:"He disfrutado mirar las cosas buenas del futuro",
+   opts:{en:["As much as ever","Rather less than I used to","Definitely less than I used to","Hardly at all"],
+         es:["Igual que antes","Algo menos que antes","Mucho menos que antes","Casi nada"]}},
+  {en:"I have blamed myself unnecessarily when things went wrong",es:"Me he culpado sin necesidad cuando las cosas no salian bien",
+   opts:{en:["Yes, most of the time","Yes, some of the time","Not very often","No, never"],
+         es:["Si, la mayoria del tiempo","Si, a veces","No con mucha frecuencia","No, nunca"]}},
+  {en:"I have been anxious or worried for no good reason",es:"He estado ansiosa o preocupada sin tener motivo",
+   opts:{en:["No, not at all","Hardly ever","Yes, sometimes","Yes, very often"],
+         es:["No, para nada","Casi nunca","Si, a veces","Si, con mucha frecuencia"]}},
+  {en:"I have felt scared or panicky for no very good reason",es:"He sentido miedo o he estado asustadiza sin motivo",
+   opts:{en:["Yes, quite a lot","Yes, sometimes","No, not much","No, not at all"],
+         es:["Si, bastante","Si, a veces","No, no mucho","No, nada"]}},
+  {en:"Things have been getting on top of me",es:"Las cosas me han estado agobiando",
+   opts:{en:["Yes, most of the time I haven't been able to cope","Yes, sometimes I haven't been coping as well as usual","No, most of the time I have coped quite well","No, I have been coping as well as ever"],
+         es:["Si, la mayoria del tiempo no he podido manejar las cosas","Si, a veces no he podido manejar tan bien como siempre","No, la mayoria del tiempo he podido manejar bien las cosas","No, he podido manejar las cosas tan bien como siempre"]}},
+  {en:"I have been so unhappy that I have had difficulty sleeping",es:"Me he sentido tan infeliz que he tenido dificultad para dormir",
+   opts:{en:["Yes, most of the time","Yes, sometimes","Not very often","No, not at all"],
+         es:["Si, la mayoria del tiempo","Si, a veces","No con mucha frecuencia","No, nada"]}},
+  {en:"I have felt sad or miserable",es:"Me he sentido triste o desgraciada",
+   opts:{en:["Yes, most of the time","Yes, quite often","Not very often","No, not at all"],
+         es:["Si, la mayoria del tiempo","Si, con bastante frecuencia","No con mucha frecuencia","No, nada"]}},
+  {en:"I have been so unhappy that I have been crying",es:"He estado tan infeliz que he estado llorando",
+   opts:{en:["Yes, most of the time","Yes, quite often","Only occasionally","No, never"],
+         es:["Si, la mayoria del tiempo","Si, con bastante frecuencia","Solo ocasionalmente","No, nunca"]}},
+  {en:"The thought of harming myself has occurred to me",es:"He pensado en hacerme dano",
+   opts:{en:["Yes, quite often","Sometimes","Hardly ever","Never"],
+         es:["Si, con bastante frecuencia","A veces","Casi nunca","Nunca"]}}
+];
+
+var lang = 'es';
+var currentQ = 0;
+var motherAnswers = new Array(10).fill(null);
+
+// === i18n ===
+var i18n = {
+  tagline:{es:"Porque tu bienestar importa",en:"Because your well-being matters"},
+  consent:{es:"Sus respuestas son confidenciales. Esta informacion no se compartira con ninguna agencia de gobierno.",
+           en:"Your answers are confidential. This information will not be shared with any government agency."},
+  begin:{es:"Comenzar",en:"Begin"},
+  back:{es:"Atras",en:"Back"},
+  next:{es:"Siguiente",en:"Next"},
+  submit:{es:"Enviar",en:"Submit"},
+  tyTitleLow:{es:"Gracias por completar el cuestionario",en:"Thank you for completing the questionnaire"},
+  tyMsgLow:{es:"Sus respuestas han sido registradas. No se requiere seguimiento adicional en este momento.",
+            en:"Your responses have been recorded. No additional follow-up is needed at this time."},
+  tyTitleHigh:{es:"Gracias por completar el cuestionario",en:"Thank you for completing the questionnaire"},
+  tyCodeMsg:{es:"Por favor escriba este codigo y repitalo cuando se le pregunte.",
+             en:"Please write this code down and repeat it when asked."},
+  promoTitle:{es:"Panel de Promotora",en:"Promotora Dashboard"},
+  promoSubtitle:{es:"Resultados del Cuestionario",en:"Screening Results"},
+  aiLabel:{es:"Resumen de IA",en:"AI Summary"},
+  suggestedLabel:{es:"Preguntas de Seguimiento Sugeridas",en:"Suggested Follow-Up Questions"},
+  notesLabel:{es:"Notas de la Promotora",en:"Promotora Notes"},
+  notesPlaceholder:{es:"Escribir notas aqui...",en:"Write notes here..."},
+  notesSaved:{es:"Guardado",en:"Saved"},
+  searchPlaceholder:{es:"Buscar por codigo...",en:"Search by code..."},
+  searchBtn:{es:"Buscar",en:"Search"},
+  deleteBtn:{es:"Eliminar Registro",en:"Delete Record"},
+  backToList:{es:"Volver a la lista",en:"Back to list"},
+  emptyMsg:{es:"No hay registros todavia. Los resultados apareceran aqui cuando las pacientes completen el cuestionario.",
+            en:"No records yet. Results will appear here when patients complete the questionnaire."},
+  availTitle:{es:"Verificar Disponibilidad",en:"Check Availability"},
+  clinicLabel:{es:"Clinica asociada",en:"Partner Clinic"},
+  clinicPlaceholder:{es:"-- Seleccionar clinica --",en:"-- Select partner clinic --"},
+  dateLabel:{es:"Seleccionar fecha",en:"Select Date"},
+  timeLabel:{es:"Horarios disponibles",en:"Available Times"}
+};
+
+function toggleLang(){
+  lang = lang==='es'?'en':'es';
+  applyLang();
+}
+
+function applyLang(){
+  var isES = lang==='es';
+  document.getElementById('lang-label').textContent = isES?'ES':'EN';
+  document.getElementById('lang-label-alt').textContent = isES?'EN':'ES';
+  document.getElementById('lang-label-promo').textContent = isES?'ES':'EN';
+  document.getElementById('lang-label-promo-alt').textContent = isES?'EN':'ES';
+
+  document.getElementById('tagline').textContent = i18n.tagline[lang];
+  document.getElementById('consent-text').textContent = i18n.consent[lang];
+  document.getElementById('begin-btn').textContent = i18n.begin[lang];
+  document.getElementById('btn-back').textContent = i18n.back[lang];
+  updateNextBtn();
+  renderQuestion();
+  updateThankYou();
+
+  document.getElementById('promo-title').textContent = i18n.promoTitle[lang];
+  document.getElementById('promo-subtitle').textContent = i18n.promoSubtitle[lang];
+  document.getElementById('ai-summary-label').textContent = i18n.aiLabel[lang];
+  document.getElementById('suggested-label').textContent = i18n.suggestedLabel[lang];
+  document.getElementById('notes-label').textContent = i18n.notesLabel[lang];
+  document.getElementById('notes-area').placeholder = i18n.notesPlaceholder[lang];
+  document.getElementById('notes-saved').textContent = i18n.notesSaved[lang];
+  document.getElementById('search-input').placeholder = i18n.searchPlaceholder[lang];
+  document.getElementById('search-btn').textContent = i18n.searchBtn[lang];
+  document.getElementById('delete-btn').textContent = i18n.deleteBtn[lang];
+  document.getElementById('back-to-list').innerHTML = '&#8249; '+i18n.backToList[lang];
+  document.getElementById('empty-msg').textContent = i18n.emptyMsg[lang];
+  document.getElementById('avail-title').textContent = i18n.availTitle[lang];
+  document.getElementById('clinic-label').textContent = i18n.clinicLabel[lang];
+  document.getElementById('clinic-placeholder').textContent = i18n.clinicPlaceholder[lang];
+  document.getElementById('date-label').textContent = i18n.dateLabel[lang];
+  document.getElementById('time-label').textContent = i18n.timeLabel[lang];
+
+  if(promoView==='list') renderCardList();
+  else renderPatientDetail();
+  if(document.getElementById('cal-wrap').style.display!=='none') renderCal();
+}
+
+// === TABS ===
+function switchTab(tab){
+  document.getElementById('mother-view').classList.toggle('active',tab==='mother');
+  document.getElementById('promotora-view').classList.toggle('active',tab==='promotora');
+  document.getElementById('tab-mother').className = 'tab-btn'+(tab==='mother'?' active-mother':'');
+  document.getElementById('tab-promotora').className = 'tab-btn'+(tab==='promotora'?' active-promotora':'');
+}
+
+// === QUIZ ===
+function startQuiz(){
+  document.getElementById('consent-screen').style.display='none';
+  document.getElementById('questionnaire').style.display='block';
+  renderQuestion();
+}
+
+function renderQuestion(){
+  var q = questions[currentQ];
+  if(!q) return;
+  var opts = q.opts[lang];
+  var html = '<h3>'+(currentQ+1)+'. '+q[lang]+'</h3>';
+  opts.forEach(function(o,i){
+    var sel = motherAnswers[currentQ]===i?'selected':'';
+    html += '<label class="option-label '+sel+'" onclick="selectOpt('+i+',this)"><input type="radio" name="q'+currentQ+'" value="'+i+'"'+(motherAnswers[currentQ]===i?' checked':'')+'>'+o+'</label>';
+  });
+  document.getElementById('question-card').innerHTML = html;
+  document.getElementById('progress-label').textContent = (currentQ+1)+' / 10';
+  document.getElementById('progress-fill').style.width = ((currentQ+1)*10)+'%';
+  document.getElementById('btn-back').style.visibility = currentQ===0?'hidden':'visible';
+  updateNextBtn();
+}
+
+function selectOpt(i,el){
+  motherAnswers[currentQ] = i;
+  document.querySelectorAll('.option-label').forEach(function(l){l.classList.remove('selected')});
+  el.classList.add('selected');
+  document.getElementById('btn-next').disabled = false;
+}
+
+function updateNextBtn(){
+  var btn = document.getElementById('btn-next');
+  btn.disabled = motherAnswers[currentQ]===null;
+  btn.textContent = currentQ===9?i18n.submit[lang]:i18n.next[lang];
+}
+
+var straightScored = [0,1,3];
+function calcScore(){
+  var total = 0;
+  for(var i=0;i<10;i++){
+    var ans = motherAnswers[i]||0;
+    if(straightScored.indexOf(i)!==-1) total += ans;
+    else total += (3-ans);
+  }
+  return total;
+}
+
+function genCode(){
+  var code;
+  var existing = patients.map(function(p){return p.code});
+  do{ code = String(1000+Math.floor(Math.random()*9000)); }while(existing.indexOf(code)!==-1);
+  return code;
+}
+
+var lastScore = 0;
+var lastCode = '';
+
+function nextQ(){
+  if(motherAnswers[currentQ]===null) return;
+  if(currentQ===9){
+    lastScore = calcScore();
+    document.getElementById('questionnaire').style.display='none';
+    document.getElementById('thank-you').style.display='flex';
+    if(lastScore>=10) lastCode = genCode();
+    else lastCode = '';
+    updateThankYou();
+    return;
+  }
+  currentQ++;
+  renderQuestion();
+}
+
+function updateThankYou(){
+  var tyTitle = document.getElementById('ty-title');
+  var tyMsg = document.getElementById('ty-msg');
+  var tyCode = document.getElementById('ty-code');
+  if(lastScore<10){
+    tyTitle.textContent = i18n.tyTitleLow[lang];
+    tyMsg.textContent = i18n.tyMsgLow[lang];
+    tyCode.style.display = 'none';
+  } else {
+    tyTitle.textContent = i18n.tyTitleHigh[lang];
+    tyMsg.textContent = i18n.tyCodeMsg[lang];
+    tyCode.textContent = lastCode;
+    tyCode.style.display = 'block';
+  }
+}
+
+function prevQ(){
+  if(currentQ>0){currentQ--;renderQuestion();}
+}
+
+// === AVAILABILITY CALENDAR ===
+var calYear, calMonth;
+var selectedDate = null;
+var availableDates = {};
+
+var monthNamesES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+var monthNamesEN = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+var dayLabelsES = ['Do','Lu','Ma','Mi','Ju','Vi','Sa'];
+var dayLabelsEN = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+
+function generateAvailability(){
+  availableDates = {};
+  var today = new Date();
+  var timeOptions = ['9:00 AM','9:30 AM','10:00 AM','10:30 AM','11:00 AM','11:30 AM','1:00 PM','1:30 PM','2:00 PM','2:30 PM','3:00 PM','3:30 PM','4:00 PM'];
+  for(var i=1;i<=30;i++){
+    var d = new Date(today);
+    d.setDate(today.getDate()+i);
+    if(d.getDay()===0||d.getDay()===6) continue;
+    if(Math.random()<0.35) continue;
+    var key = dateKey(d);
+    var shuffled = timeOptions.slice().sort(function(){return Math.random()-0.5});
+    availableDates[key] = shuffled.slice(0,3+Math.floor(Math.random()*4)).sort();
+  }
+}
+
+function dateKey(d){
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+
+function initCal(){
+  var today = new Date();
+  calYear = today.getFullYear();
+  calMonth = today.getMonth();
+}
+
+function renderCal(){
+  var grid = document.getElementById('cal-grid');
+  var labels = lang==='es'?dayLabelsES:dayLabelsEN;
+  var monthNames = lang==='es'?monthNamesES:monthNamesEN;
+  document.getElementById('cal-month-label').textContent = monthNames[calMonth]+' '+calYear;
+  var today = new Date();
+  document.getElementById('cal-prev').disabled = (calYear===today.getFullYear()&&calMonth===today.getMonth());
+  var maxM = today.getMonth()+2, maxY = today.getFullYear();
+  if(maxM>11){maxM-=12;maxY++;}
+  document.getElementById('cal-next').disabled = (calYear>maxY||(calYear===maxY&&calMonth>=maxM));
+  var html = '';
+  for(var i=0;i<7;i++) html += '<div class="cal-day-label">'+labels[i]+'</div>';
+  var firstDay = new Date(calYear,calMonth,1).getDay();
+  var daysInMonth = new Date(calYear,calMonth+1,0).getDate();
+  var todayKey = dateKey(today);
+  for(var i=0;i<firstDay;i++) html += '<div class="cal-day"></div>';
+  for(var d=1;d<=daysInMonth;d++){
+    var dt = new Date(calYear,calMonth,d);
+    var key = dateKey(dt);
+    var isToday = key===todayKey, isPast = dt<=today&&!isToday;
+    var isAvail = !!availableDates[key], isSel = key===selectedDate;
+    var cls = 'cal-day';
+    if(isToday) cls+=' today'; if(isPast) cls+=' past';
+    if(isAvail&&!isPast) cls+=' available'; if(isSel) cls+=' selected';
+    if(isAvail&&!isPast) html += '<div class="'+cls+'" onclick="selectDate(\''+key+'\')">'+d+'</div>';
+    else html += '<div class="'+cls+'">'+d+'</div>';
+  }
+  grid.innerHTML = html;
+}
+
+function calNav(dir){
+  calMonth+=dir;
+  if(calMonth>11){calMonth=0;calYear++;}
+  if(calMonth<0){calMonth=11;calYear--;}
+  renderCal();
+}
+
+function selectDate(key){
+  selectedDate = key;
+  renderCal();
+  var wrap = document.getElementById('time-wrap');
+  var container = document.getElementById('time-slots');
+  if(!availableDates[key]){wrap.style.display='none';return;}
+  wrap.style.display = 'block';
+  container.innerHTML = availableDates[key].map(function(t){return '<div class="time-slot">'+t+'</div>'}).join('');
+}
+
+function onClinicChange(){
+  var v = document.getElementById('clinic-select').value;
+  if(v){
+    generateAvailability(); selectedDate=null;
+    document.getElementById('time-wrap').style.display='none';
+    document.getElementById('cal-wrap').style.display='block';
+    renderCal();
+  } else {
+    document.getElementById('cal-wrap').style.display='none';
+    document.getElementById('time-wrap').style.display='none';
+  }
+}
+
+// === INIT ===
+initCal();
+renderCardList();
+</script>
+</body>
+</html>
