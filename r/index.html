@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PostaCare — Resultados</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --blush:#F2D7D5;--cream:#FDF6F0;--rose:#D4837F;--rose-dark:#B5605C;
+    --warm-text:#5A3E3A;--light-rose:#F7E8E6;
+    --teal:#2A7B8B;--teal-dark:#1D5A66;--navy:#1B3A4B;--teal-light:#E6F4F1;
+    --green:#3A9B7A;--green-dark:#2D7A60;
+    --yellow:#E8B84B;--yellow-bg:#FFF8E7;--red:#C0392B;--red-bg:#FDECEA;
+  }
+  body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--cream);color:var(--warm-text);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px 20px}
+
+  .brand{font-size:28px;font-weight:300;color:var(--rose-dark);letter-spacing:2px;margin-bottom:4px}
+  .brand-tag{font-size:13px;color:var(--rose);font-style:italic;margin-bottom:36px}
+
+  .results-card{background:#fff;border-radius:24px;padding:36px 32px;max-width:420px;width:100%;box-shadow:0 4px 24px rgba(180,120,110,.12);text-align:center}
+
+  .checkmark{width:64px;height:64px;background:var(--light-rose);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 24px;animation:pop .4s cubic-bezier(.34,1.56,.64,1)}
+  @keyframes pop{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
+  .checkmark svg{width:30px;height:30px;stroke:var(--rose-dark);fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+
+  .result-title{font-size:20px;font-weight:600;color:var(--warm-text);margin-bottom:10px}
+  .result-subtitle{font-size:14px;color:#9B7472;line-height:1.6;margin-bottom:28px}
+
+  .code-section{background:var(--light-rose);border-radius:16px;padding:20px 24px;margin-bottom:24px}
+  .code-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--rose-dark);margin-bottom:10px}
+  .code-display{font-size:52px;font-weight:700;color:var(--rose-dark);letter-spacing:12px;font-family:'Courier New',monospace;line-height:1;margin-bottom:10px}
+  .code-digits{display:flex;justify-content:center;gap:10px;margin-bottom:12px}
+  .code-digit{width:56px;height:72px;background:#fff;border:2px solid var(--blush);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:36px;font-weight:700;color:var(--rose-dark);font-family:'Courier New',monospace;box-shadow:0 2px 8px rgba(180,120,110,.08);animation:slideUp .3s ease both}
+  .code-digit:nth-child(1){animation-delay:.05s}
+  .code-digit:nth-child(2){animation-delay:.1s}
+  .code-digit:nth-child(3){animation-delay:.15s}
+  .code-digit:nth-child(4){animation-delay:.2s}
+  @keyframes slideUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+  .code-instruction{font-size:13px;color:#9B7472;line-height:1.5}
+
+  .info-row{display:flex;gap:10px;margin-bottom:8px}
+  .info-pill{flex:1;background:var(--teal-light);border-radius:12px;padding:12px 10px;text-align:center}
+  .info-pill .pill-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--teal-dark);margin-bottom:4px}
+  .info-pill .pill-value{font-size:13px;color:var(--navy);font-weight:600;line-height:1.3}
+
+  .next-steps{text-align:left;margin-bottom:8px}
+  .next-steps-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--teal-dark);margin-bottom:12px}
+  .step{display:flex;align-items:flex-start;gap:12px;margin-bottom:12px}
+  .step-num{width:24px;height:24px;background:var(--rose);color:#fff;border-radius:50%;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+  .step-text{font-size:13px;color:var(--warm-text);line-height:1.5}
+
+  .lang-btn{position:fixed;top:14px;right:14px;background:#fff;border:1px solid #ddd;border-radius:20px;padding:6px 14px;font-size:13px;font-weight:600;color:var(--rose-dark);cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+  .lang-btn:hover{background:var(--light-rose)}
+</style>
+</head>
+<body>
+
+<button class="lang-btn" onclick="toggleLang()" id="lang-btn">EN</button>
+
+<div class="brand">PostaCare</div>
+<div class="brand-tag" id="brand-tag">Porque tu bienestar importa</div>
+
+<div class="results-card">
+  <div class="checkmark">
+    <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+  </div>
+
+  <div class="result-title" id="result-title">Cuestionario Completado</div>
+  <div class="result-subtitle" id="result-subtitle">Sus respuestas han sido registradas de forma confidencial.</div>
+
+  <div class="code-section">
+    <div class="code-label" id="code-label">Su Codigo</div>
+    <div class="code-digits" id="code-digits"></div>
+    <div class="code-instruction" id="code-instruction">Por favor escriba este codigo y repitalo cuando se le pregunte.</div>
+  </div>
+
+  <div class="info-row">
+    <div class="info-pill">
+      <div class="pill-label" id="date-label">Fecha</div>
+      <div class="pill-value" id="date-value"></div>
+    </div>
+    <div class="info-pill">
+      <div class="pill-label" id="time-label">Hora</div>
+      <div class="pill-value" id="time-value"></div>
+    </div>
+  </div>
+
+  <div style="height:20px"></div>
+
+  <div class="next-steps">
+    <div class="next-steps-title" id="steps-title">Proximos Pasos</div>
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-text" id="step1">Anote su codigo en un lugar seguro.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-text" id="step2">Su promotora revisara sus respuestas y se comunicara con usted pronto.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-text" id="step3">Si tiene preguntas urgentes, contacte a su clinica de confianza.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+var lang = 'es';
+
+var i18n = {
+  brandTag:{es:'Porque tu bienestar importa',en:'Because your well-being matters'},
+  langBtn:{es:'EN',en:'ES'},
+  resultTitle:{es:'Cuestionario Completado',en:'Screening Complete'},
+  resultSubtitle:{es:'Sus respuestas han sido registradas de forma confidencial.',en:'Your responses have been recorded confidentially.'},
+  codeLabel:{es:'Su Codigo',en:'Your Code'},
+  codeInstruction:{es:'Por favor escriba este codigo y repitalo cuando se le pregunte.',en:'Please write this code down and repeat it when asked.'},
+  dateLabel:{es:'Fecha',en:'Date'},
+  timeLabel:{es:'Hora',en:'Time'},
+  stepsTitle:{es:'Proximos Pasos',en:'Next Steps'},
+  step1:{es:'Anote su codigo en un lugar seguro.',en:'Write your code down and keep it somewhere safe.'},
+  step2:{es:'Su promotora revisara sus respuestas y se comunicara con usted pronto.',en:'Your promotora will review your responses and reach out to you soon.'},
+  step3:{es:'Si tiene preguntas urgentes, contacte a su clinica de confianza.',en:'If you have urgent concerns, contact your trusted clinic.'}
+};
+
+function genCode(){
+  return String(1000 + Math.floor(Math.random() * 9000));
+}
+
+var code = genCode();
+
+function renderCode(){
+  var el = document.getElementById('code-digits');
+  el.innerHTML = '';
+  code.split('').forEach(function(d){
+    var div = document.createElement('div');
+    div.className = 'code-digit';
+    div.textContent = d;
+    el.appendChild(div);
+  });
+}
+
+function formatDate(d, locale){
+  return d.toLocaleDateString(locale === 'es' ? 'es-US' : 'en-US', {month:'long',day:'numeric',year:'numeric'});
+}
+
+function formatTime(d){
+  return d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});
+}
+
+var now = new Date();
+
+function applyLang(){
+  document.getElementById('brand-tag').textContent = i18n.brandTag[lang];
+  document.getElementById('lang-btn').textContent = i18n.langBtn[lang];
+  document.getElementById('result-title').textContent = i18n.resultTitle[lang];
+  document.getElementById('result-subtitle').textContent = i18n.resultSubtitle[lang];
+  document.getElementById('code-label').textContent = i18n.codeLabel[lang];
+  document.getElementById('code-instruction').textContent = i18n.codeInstruction[lang];
+  document.getElementById('date-label').textContent = i18n.dateLabel[lang];
+  document.getElementById('time-label').textContent = i18n.timeLabel[lang];
+  document.getElementById('steps-title').textContent = i18n.stepsTitle[lang];
+  document.getElementById('step1').textContent = i18n.step1[lang];
+  document.getElementById('step2').textContent = i18n.step2[lang];
+  document.getElementById('step3').textContent = i18n.step3[lang];
+  document.getElementById('date-value').textContent = formatDate(now, lang);
+  document.getElementById('time-value').textContent = formatTime(now);
+}
+
+function toggleLang(){
+  lang = lang === 'es' ? 'en' : 'es';
+  applyLang();
+}
+
+renderCode();
+applyLang();
+</script>
+</body>
+</html>
