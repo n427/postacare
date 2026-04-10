@@ -158,6 +158,10 @@
   .delete-card{margin:16px 0 0;text-align:center}
   .delete-btn{width:100%;padding:14px;background:#fff;color:var(--red);border:2px solid var(--red);border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;transition:.2s}
   .delete-btn:hover{background:var(--red);color:#fff}
+
+  /* Self-harm flag */
+  .self-harm-card{outline:2px solid var(--red);outline-offset:-2px}
+  .self-harm-pill{display:inline-block;margin-top:4px;padding:2px 8px;background:var(--red-bg);border:1px solid var(--red);border-radius:8px;font-size:11px;font-weight:700;color:var(--red)}
 </style>
 </head>
 <body>
@@ -165,6 +169,7 @@
 <div class="tab-bar">
   <button class="tab-btn active-mother" id="tab-mother" onclick="switchTab('mother')">Madre / Mother</button>
   <button class="tab-btn" id="tab-promotora" onclick="switchTab('promotora')">Promotora</button>
+  <button class="tab-btn" id="tab-results" onclick="switchTab('results')" style="flex:0;padding:14px 18px;white-space:nowrap">Resultados</button>
 </div>
 
 <!-- Mother View -->
@@ -229,6 +234,14 @@
     <button class="back-to-list" id="back-to-list" onclick="showListView()">&#8249; Volver a la lista</button>
     <div class="detail-code" id="detail-code"></div>
 
+    <div id="self-harm-alert" style="display:none;background:var(--red-bg);border:2px solid var(--red);border-radius:14px;padding:14px 18px;margin-bottom:14px;display:none;align-items:center;gap:12px">
+      <span style="font-size:22px">⚠️</span>
+      <div>
+        <div style="font-size:13px;font-weight:700;color:var(--red);margin-bottom:2px" id="sh-alert-title">Alerta: Pregunta de Autolesion</div>
+        <div style="font-size:13px;color:#7B2020;line-height:1.4" id="sh-alert-body">Esta paciente respondio positivamente a la pregunta sobre pensamientos de autolesion. Se recomienda intervencion inmediata.</div>
+      </div>
+    </div>
+
     <div class="score-card">
       <div class="score-row">
         <div class="score-number" id="score-display"></div>
@@ -280,11 +293,61 @@
   </div>
 </div>
 
+<!-- Results View -->
+<div class="view" id="results-view">
+  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:calc(100vh - 50px);padding:30px 20px">
+    <div style="font-size:26px;font-weight:300;color:var(--rose-dark);letter-spacing:2px;margin-bottom:4px">PostaCare</div>
+    <div style="font-size:13px;color:var(--rose);font-style:italic;margin-bottom:36px" id="r-tagline">Porque tu bienestar importa</div>
+
+    <div style="background:#fff;border-radius:24px;padding:36px 32px;max-width:420px;width:100%;box-shadow:0 4px 24px rgba(180,120,110,.12);text-align:center">
+      <div style="width:64px;height:64px;background:var(--light-rose);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 24px">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="var(--rose-dark)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+      </div>
+
+      <div style="font-size:20px;font-weight:600;color:var(--warm-text);margin-bottom:10px" id="r-title">Cuestionario Completado</div>
+      <div style="font-size:14px;color:#9B7472;line-height:1.6;margin-bottom:28px" id="r-subtitle">Sus respuestas han sido registradas de forma confidencial.</div>
+
+      <div style="background:var(--light-rose);border-radius:16px;padding:20px 24px;margin-bottom:24px">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--rose-dark);margin-bottom:12px" id="r-code-label">Su Codigo</div>
+        <div id="r-code-digits" style="display:flex;justify-content:center;gap:10px;margin-bottom:12px"></div>
+        <div style="font-size:13px;color:#9B7472;line-height:1.5" id="r-code-instruction">Por favor escriba este codigo y repitalo cuando se le pregunte.</div>
+      </div>
+
+      <div style="display:flex;gap:10px;margin-bottom:20px">
+        <div style="flex:1;background:var(--teal-light);border-radius:12px;padding:12px 10px;text-align:center">
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--teal-dark);margin-bottom:4px" id="r-date-label">Fecha</div>
+          <div style="font-size:13px;color:var(--navy);font-weight:600;line-height:1.3" id="r-date-value"></div>
+        </div>
+        <div style="flex:1;background:var(--teal-light);border-radius:12px;padding:12px 10px;text-align:center">
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--teal-dark);margin-bottom:4px" id="r-time-label">Hora</div>
+          <div style="font-size:13px;color:var(--navy);font-weight:600;line-height:1.3" id="r-time-value"></div>
+        </div>
+      </div>
+
+      <div style="text-align:left">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--teal-dark);margin-bottom:12px" id="r-steps-title">Proximos Pasos</div>
+        <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:12px">
+          <div style="width:24px;height:24px;background:var(--rose);color:#fff;border-radius:50%;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">1</div>
+          <div style="font-size:13px;color:var(--warm-text);line-height:1.5" id="r-step1">Anote su codigo en un lugar seguro.</div>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:12px">
+          <div style="width:24px;height:24px;background:var(--rose);color:#fff;border-radius:50%;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">2</div>
+          <div style="font-size:13px;color:var(--warm-text);line-height:1.5" id="r-step2">Su promotora revisara sus respuestas y se comunicara con usted pronto.</div>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:12px">
+          <div style="width:24px;height:24px;background:var(--rose);color:#fff;border-radius:50%;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">3</div>
+          <div style="font-size:13px;color:var(--warm-text);line-height:1.5" id="r-step3">Si tiene preguntas urgentes, contacte a su clinica de confianza.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 // === DUMMY PATIENTS ===
 var patients = [
   {
-    code:'4821',score:14,risk:'moderate',notes:'',
+    code:'4821',score:14,risk:'moderate',selfHarm:false,notes:'',
     riskLabel:{es:'Riesgo Moderado',en:'Moderate Risk'},
     summary:{
       es:'Esta madre obtuvo las puntuaciones mas altas en preguntas relacionadas con sentirse agobiada y la incapacidad de disfrutar actividades diarias. No marco la pregunta sobre autolesion. Puede estar experimentando falta de sueno y falta de apoyo en el hogar.',
@@ -296,7 +359,7 @@ var patients = [
     }
   },
   {
-    code:'7193',score:21,risk:'high',notes:'',
+    code:'7193',score:21,risk:'high',selfHarm:true,notes:'',
     riskLabel:{es:'Riesgo Alto',en:'High Risk'},
     summary:{
       es:'Esta madre presento puntuaciones elevadas en sentimientos de tristeza, llanto frecuente y dificultad para dormir. Marco positivo en la pregunta sobre autolesion. Se recomienda intervencion inmediata y referencia a servicios de salud mental.',
@@ -308,7 +371,7 @@ var patients = [
     }
   },
   {
-    code:'3056',score:7,risk:'low',notes:'',
+    code:'3056',score:7,risk:'low',selfHarm:false,notes:'',
     riskLabel:{es:'Riesgo Bajo',en:'Low Risk'},
     summary:{
       es:'Esta madre presento puntuaciones bajas en general. Reporta algo de ansiedad ocasional pero mantiene buen funcionamiento diario. No marco en la pregunta de autolesion. Se sugiere seguimiento de rutina.',
@@ -320,7 +383,7 @@ var patients = [
     }
   },
   {
-    code:'5847',score:16,risk:'moderate',notes:'',
+    code:'5847',score:16,risk:'moderate',selfHarm:false,notes:'',
     riskLabel:{es:'Riesgo Moderado',en:'Moderate Risk'},
     summary:{
       es:'Esta madre reporta sentirse agobiada con frecuencia y culparse a si misma innecesariamente. Tiene dificultad para disfrutar actividades. No marco en autolesion. Podria beneficiarse de consejeria y apoyo adicional en el hogar.',
@@ -332,7 +395,7 @@ var patients = [
     }
   },
   {
-    code:'9312',score:19,risk:'high',notes:'',
+    code:'9312',score:19,risk:'high',selfHarm:false,notes:'',
     riskLabel:{es:'Riesgo Alto',en:'High Risk'},
     summary:{
       es:'Esta madre presenta puntuaciones altas en ansiedad, miedo sin motivo y sentirse agobiada. Reporta llanto frecuente y dificultad para dormir. No marco en autolesion pero se recomienda evaluacion de seguimiento cercano.',
@@ -391,8 +454,8 @@ function renderCardList(filter){
       html += '<div class="risk-section-label '+p.risk+'">'+sectionLabels[p.risk][lang]+'</div>';
       lastRisk = p.risk;
     }
-    html += '<div class="patient-card risk-'+p.risk+'" onclick="openDetail('+realIdx+')">';
-    html += '<div><div class="card-code">'+p.code+'</div><div class="card-score">'+p.score+' / 30</div></div>';
+    html += '<div class="patient-card risk-'+p.risk+(p.selfHarm?' self-harm-card':'')+'" onclick="openDetail('+realIdx+')">';
+    html += '<div><div class="card-code">'+p.code+'</div><div class="card-score">'+p.score+' / 30</div>'+(p.selfHarm?'<div class="self-harm-pill">'+(lang==='es'?'⚠ Autolesion':'⚠ Self-Harm')+'</div>':'')+'</div>';
     html += '<div class="card-badge '+p.risk+'">'+p.riskLabel[lang]+'</div>';
     html += '</div>';
   });
@@ -451,6 +514,15 @@ function renderPatientDetail(){
   var badge = document.getElementById('risk-badge');
   badge.textContent = p.riskLabel[lang];
   badge.className = 'risk-badge ' + p.risk;
+
+  var alert = document.getElementById('self-harm-alert');
+  if(p.selfHarm){
+    alert.style.display = 'flex';
+    document.getElementById('sh-alert-title').textContent = lang==='es'?'Alerta: Pregunta de Autolesion':'Alert: Self-Harm Question';
+    document.getElementById('sh-alert-body').textContent = lang==='es'?'Esta paciente respondio positivamente a la pregunta sobre pensamientos de autolesion. Se recomienda intervencion inmediata.':'This patient answered positively to the self-harm question. Immediate intervention is recommended.';
+  } else {
+    alert.style.display = 'none';
+  }
 
   document.getElementById('ai-summary-text').textContent = p.summary[lang];
   document.getElementById('suggested-list').innerHTML = p.questions[lang].map(function(q){return '<li>'+q+'</li>'}).join('');
@@ -591,14 +663,48 @@ function applyLang(){
   if(promoView==='list') renderCardList();
   else renderPatientDetail();
   if(document.getElementById('cal-wrap').style.display!=='none') renderCal();
+  if(document.getElementById('results-view').classList.contains('active')) renderResultsTab();
 }
 
 // === TABS ===
 function switchTab(tab){
   document.getElementById('mother-view').classList.toggle('active',tab==='mother');
   document.getElementById('promotora-view').classList.toggle('active',tab==='promotora');
+  document.getElementById('results-view').classList.toggle('active',tab==='results');
   document.getElementById('tab-mother').className = 'tab-btn'+(tab==='mother'?' active-mother':'');
   document.getElementById('tab-promotora').className = 'tab-btn'+(tab==='promotora'?' active-promotora':'');
+  document.getElementById('tab-results').className = 'tab-btn'+(tab==='results'?' active-mother':'');
+  if(tab==='results') renderResultsTab();
+}
+
+function renderResultsTab(){
+  var now = new Date();
+  document.getElementById('r-tagline').textContent = lang==='es'?'Porque tu bienestar importa':'Because your well-being matters';
+  document.getElementById('r-title').textContent = lang==='es'?'Cuestionario Completado':'Screening Complete';
+  document.getElementById('r-subtitle').textContent = lang==='es'?'Sus respuestas han sido registradas de forma confidencial.':'Your responses have been recorded confidentially.';
+  document.getElementById('r-code-label').textContent = lang==='es'?'Su Codigo':'Your Code';
+  document.getElementById('r-code-instruction').textContent = lang==='es'?'Por favor escriba este codigo y repitalo cuando se le pregunte.':'Please write this code down and repeat it when asked.';
+  document.getElementById('r-date-label').textContent = lang==='es'?'Fecha':'Date';
+  document.getElementById('r-time-label').textContent = lang==='es'?'Hora':'Time';
+  document.getElementById('r-steps-title').textContent = lang==='es'?'Proximos Pasos':'Next Steps';
+  document.getElementById('r-step1').textContent = lang==='es'?'Anote su codigo en un lugar seguro.':'Write your code down and keep it somewhere safe.';
+  document.getElementById('r-step2').textContent = lang==='es'?'Su promotora revisara sus respuestas y se comunicara con usted pronto.':'Your promotora will review your responses and reach out to you soon.';
+  document.getElementById('r-step3').textContent = lang==='es'?'Si tiene preguntas urgentes, contacte a su clinica de confianza.':'If you have urgent concerns, contact your trusted clinic.';
+  document.getElementById('r-date-value').textContent = now.toLocaleDateString(lang==='es'?'es-US':'en-US',{month:'long',day:'numeric',year:'numeric'});
+  document.getElementById('r-time-value').textContent = now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});
+
+  // Generate code once per session
+  if(!window._rCode){
+    window._rCode = String(1000+Math.floor(Math.random()*9000));
+  }
+  var digits = document.getElementById('r-code-digits');
+  digits.innerHTML = '';
+  window._rCode.split('').forEach(function(d){
+    var div = document.createElement('div');
+    div.style.cssText = 'width:56px;height:72px;background:#fff;border:2px solid var(--blush);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:36px;font-weight:700;color:var(--rose-dark);font-family:Courier New,monospace;box-shadow:0 2px 8px rgba(180,120,110,.08)';
+    div.textContent = d;
+    digits.appendChild(div);
+  });
 }
 
 // === QUIZ ===
